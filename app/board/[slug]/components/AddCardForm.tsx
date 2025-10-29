@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import Button from "../../../components/ui/Button";
 
 export default function AddCardForm({ onAdd }: { onAdd: (title: string) => void }) {
   const [title, setTitle] = useState("");
@@ -30,9 +31,9 @@ export default function AddCardForm({ onAdd }: { onAdd: (title: string) => void 
           }
         }}
       />
-      <button className="bg-blue-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-blue-500" onClick={submit}>
+      <Button variant="primary" size="sm" className="shadow-sm" onClick={submit}>
         追加
-      </button>
+      </Button>
     </div>
   );
 }

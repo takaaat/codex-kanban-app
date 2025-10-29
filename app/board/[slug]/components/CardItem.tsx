@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { Card } from "../../../../lib/types";
+import Button from "../../../components/ui/Button";
 
 export default function CardItem({
   card,
@@ -46,36 +47,30 @@ export default function CardItem({
               }
             }}
           />
-          <button className="bg-blue-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-blue-500">
+          <Button variant="primary" size="sm" className="shadow-sm">
             保存
-          </button>
-          <button
-            type="button"
-            className="px-3 py-1 text-sm font-medium text-slate-500 hover:bg-slate-100"
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setTitle(card.title);
               setEditing(false);
             }}
           >
             キャンセル
-          </button>
+          </Button>
         </form>
       ) : (
         <div className="flex items-start justify-between gap-2">
           <div className="whitespace-pre-wrap break-words text-slate-700">{card.title}</div>
           <div className="flex gap-1">
-            <button
-              className="px-2 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50"
-              onClick={() => setEditing(true)}
-            >
+            <Button variant="secondary" size="sm" className="text-blue-600 hover:bg-blue-50" onClick={() => setEditing(true)}>
               編集
-            </button>
-            <button
-              className="px-2 py-1 text-sm font-medium text-red-500 hover:bg-red-50"
-              onClick={() => onDelete(card.id, columnId)}
-            >
+            </Button>
+            <Button variant="danger" size="sm" onClick={() => onDelete(card.id, columnId)}>
               削除
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -6,6 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Column } from "../../../../lib/types";
 import AddCardForm from "./AddCardForm";
 import CardItem from "./CardItem";
+import Button from "../../../components/ui/Button";
 
 type Props = {
   column: Column;
@@ -51,27 +52,26 @@ export default function ColumnView({
               }}
               className="min-w-0 flex-1 border border-slate-200 px-2 py-1 text-sm shadow-sm focus:border-blue-400 focus:outline-none"
             />
-            <button className="bg-blue-600 px-3 py-1 text-sm font-medium text-white shadow-sm hover:bg-blue-500">
+            <Button variant="primary" size="sm" className="shadow-sm">
               保存
-            </button>
+            </Button>
           </form>
         ) : (
           <h2 className="flex-1 truncate text-base font-semibold text-slate-700">{column.name}</h2>
         )}
         {!editing && (
           <div className="flex gap-1">
-            <button
-              className="px-2 py-1 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-blue-600"
+            <Button
+              variant="secondary"
+              size="sm"
+              className="hover:text-blue-600"
               onClick={() => setEditing(true)}
             >
               名称変更
-            </button>
-            <button
-              className="px-2 py-1 text-sm font-medium text-red-500 transition hover:bg-red-50"
-              onClick={() => deleteColumn(column.id)}
-            >
+            </Button>
+            <Button variant="danger" size="sm" onClick={() => deleteColumn(column.id)}>
               削除
-            </button>
+            </Button>
           </div>
         )}
       </div>
