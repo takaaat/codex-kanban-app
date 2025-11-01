@@ -5,19 +5,20 @@ import {
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
-  DragCancelEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCenter,
 } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Board } from "../../../../lib/types";
 import ColumnView from "./ColumnView";
 import useBoardState from "../hooks/useBoardState";
 import { cloneBoard, moveCard } from "../utils/dnd";
 import Button from "../../../components/ui/Button";
+import useIsMobile from "../hooks/useIsMobile";
+import { cn } from "../../../../lib/utils/cn";
 
 type Props = { slug: string };
 
@@ -30,22 +31,14 @@ export default function BoardView({ slug }: Props) {
     addCard,
     editCard,
     deleteCard,
+    moveCardToColumn,
     updateBoard,
   } = useBoardState(slug);
 
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const initialBoardRef = useRef<Board | null>(null);
-
-  const activeCard = useMemo(() => {
-    if (!activeCardId) return null;
-    for (const column of board.columns) {
-      const card = column.cards.find((item) => item.id === activeCardId);
-      if (card) {
-        return { card, columnId: column.id };
-      }
-    }
-    return null;
-  }, [activeCardId, board]);
+  const isMobile = useIsMobile();
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -68,13 +61,35 @@ export default function BoardView({ slug }: Props) {
     initialBoardRef.current = null;
   }
 
-  function onDragCancel(_event: DragCancelEvent) {
+  function onDragCancel() {
     if (initialBoardRef.current) {
       updateBoard(() => initialBoardRef.current!);
     }
     setActiveCardId(null);
     initialBoardRef.current = null;
   }
+
+  const fallbackColumnId = board.columns[0]?.id ?? null;
+  const currentColumnId =
+    activeColumnId && board.columns.some((column) => column.id === activeColumnId)
+      ? activeColumnId
+      : fallbackColumnId;
+
+  const activeCard = activeCardId
+    ? (() => {
+        for (const column of board.columns) {
+          const card = column.cards.find((item) => item.id === activeCardId);
+          if (card) {
+            return { card, columnId: column.id };
+          }
+        }
+        return null;
+      })()
+    : null;
+
+  const visibleColumns = isMobile
+    ? board.columns.filter((column) => column.id === currentColumnId)
+    : board.columns;
 
   return (
     <div className="min-h-screen bg-transparent px-4 py-8 sm:px-8">
@@ -83,18 +98,40 @@ export default function BoardView({ slug }: Props) {
           <div>
             <p className="text-sm font-medium text-slate-500">Personal Kanban</p>
             <h1 className="text-2xl font-semibold text-slate-800">
-              ボード
-              <span
-                className="ml-2 inline-flex items-center border border-blue-200 bg-accent-soft px-3 py-1 text-sm font-medium text-accent"
-              >
+              Board
+              <span className="ml-2 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
                 {board.slug}
               </span>
             </h1>
           </div>
           <Button variant="primary" size="md" className="shadow-sm" onClick={addColumn}>
-            + 列を追加
+            + Add column
           </Button>
         </header>
+
+        {isMobile && board.columns.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {board.columns.map((column) => {
+              const isActive = column.id === currentColumnId;
+              return (
+                <button
+                  key={column.id}
+                  type="button"
+                  onClick={() => setActiveColumnId(column.id)}
+                  className={cn(
+                    "flex-shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition",
+                    isActive
+                      ? "border-blue-500 bg-blue-500 text-white"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600"
+                  )}
+                  aria-pressed={isActive}
+                >
+                  {column.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <DndContext
           sensors={sensors}
@@ -104,17 +141,25 @@ export default function BoardView({ slug }: Props) {
           onDragEnd={onDragEnd}
           onDragCancel={onDragCancel}
         >
-          <div className="flex gap-5 overflow-x-auto pb-4">
-            {board.columns.map((col) => (
-              <div key={col.id} className="w-72 flex-shrink-0">
-                <SortableContext items={col.cards.map((c) => c.id)} strategy={rectSortingStrategy}>
+          <div
+            className={cn(
+              "pb-4",
+              isMobile ? "flex flex-col gap-4" : "flex gap-5 overflow-x-auto"
+            )}
+          >
+            {visibleColumns.map((column) => (
+              <div key={column.id} className={cn(isMobile ? "w-full" : "w-72 flex-shrink-0")}>
+                <SortableContext items={column.cards.map((card) => card.id)} strategy={rectSortingStrategy}>
                   <ColumnView
-                    column={col}
+                    column={column}
                     addCard={addCard}
                     renameColumn={renameColumn}
                     deleteColumn={deleteColumn}
                     editCard={editCard}
                     deleteCard={deleteCard}
+                    moveCard={moveCardToColumn}
+                    allColumns={board.columns}
+                    isMobile={isMobile}
                   />
                 </SortableContext>
               </div>

@@ -55,6 +55,9 @@ type Props = {
   deleteColumn: (id: string) => void;
   editCard: (cardId: string, columnId: string, title: string) => void;
   deleteCard: (cardId: string, columnId: string) => void;
+  moveCard: (cardId: string, fromColumnId: string, toColumnId: string) => void;
+  allColumns: Array<{ id: string; name: string }>;
+  isMobile: boolean;
 };
 
 export default function ColumnView({
@@ -64,6 +67,9 @@ export default function ColumnView({
   deleteColumn,
   editCard,
   deleteCard,
+  moveCard,
+  allColumns,
+  isMobile,
 }: Props) {
   const { setNodeRef } = useDroppable({ id: column.id, data: { columnId: column.id } });
   const [editing, setEditing] = useState(false);
@@ -93,7 +99,7 @@ export default function ColumnView({
               className="min-w-0 flex-1 border border-slate-200 px-2 py-1 text-sm shadow-sm focus:border-blue-400 focus:outline-none"
             />
             <Button type="submit" variant="primary" size="sm" className="shadow-sm">
-              保存
+              Save
             </Button>
           </form>
         ) : (
@@ -106,20 +112,20 @@ export default function ColumnView({
               size="sm"
               className="p-1 text-blue-600 hover:bg-blue-50"
               onClick={() => setEditing(true)}
-              aria-label="列名を編集"
+              aria-label="Rename column"
             >
               <PencilIcon />
-              <span className="sr-only">列名を編集</span>
+              <span className="sr-only">Rename column</span>
             </Button>
             <Button
               variant="danger"
               size="sm"
               className="p-1"
               onClick={() => deleteColumn(column.id)}
-              aria-label="列を削除"
+              aria-label="Delete column"
             >
               <TrashIcon />
-              <span className="sr-only">列を削除</span>
+              <span className="sr-only">Delete column</span>
             </Button>
           </div>
         )}
@@ -128,7 +134,15 @@ export default function ColumnView({
       <div ref={setNodeRef} className="flex flex-1 flex-col gap-2 border border-slate-200 bg-slate-50/80 p-2">
         {column.cards.map((card, idx) => (
           <SortableCard key={card.id} cardId={card.id} columnId={column.id} index={idx}>
-            <CardItem card={card} columnId={column.id} onEdit={editCard} onDelete={deleteCard} />
+            <CardItem
+              card={card}
+              columnId={column.id}
+              onEdit={editCard}
+              onDelete={deleteCard}
+              onMove={moveCard}
+              columns={allColumns}
+              isMobile={isMobile}
+            />
           </SortableCard>
         ))}
       </div>

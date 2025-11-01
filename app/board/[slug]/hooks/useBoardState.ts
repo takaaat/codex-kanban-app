@@ -12,6 +12,7 @@ type UseBoardStateResult = {
   addCard: (columnId: string, title: string) => void;
   editCard: (cardId: string, columnId: string, title: string) => void;
   deleteCard: (cardId: string, columnId: string) => void;
+  moveCardToColumn: (cardId: string, fromColumnId: string, toColumnId: string) => void;
   updateBoard: (updater: (draft: Board) => Board) => void;
 };
 
@@ -109,6 +110,40 @@ export default function useBoardState(slug: string): UseBoardStateResult {
     [updateBoard]
   );
 
+  const moveCardToColumn = useCallback(
+    (cardId: string, fromColumnId: string, toColumnId: string) => {
+      if (fromColumnId === toColumnId) return;
+
+      updateBoard((prev) => {
+        const fromColumn = prev.columns.find((column) => column.id === fromColumnId);
+        const toColumn = prev.columns.find((column) => column.id === toColumnId);
+        if (!fromColumn || !toColumn) return prev;
+        const movingCard = fromColumn.cards.find((card) => card.id === cardId);
+        if (!movingCard) return prev;
+
+        return {
+          ...prev,
+          columns: prev.columns.map((column) => {
+            if (column.id === fromColumnId) {
+              return {
+                ...column,
+                cards: column.cards.filter((card) => card.id !== cardId),
+              };
+            }
+            if (column.id === toColumnId) {
+              return {
+                ...column,
+                cards: [...column.cards, { ...movingCard }],
+              };
+            }
+            return column;
+          }),
+        };
+      });
+    },
+    [updateBoard]
+  );
+
   return {
     board,
     addColumn,
@@ -117,7 +152,7 @@ export default function useBoardState(slug: string): UseBoardStateResult {
     addCard,
     editCard,
     deleteCard,
+    moveCardToColumn,
     updateBoard,
   };
 }
-
